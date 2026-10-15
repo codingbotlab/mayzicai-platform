@@ -1,0 +1,47 @@
+name: Verify MayzicAI Studio
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches:
+      - 'mayzicai/**'
+    paths:
+      - 'studio/**'
+      - '.github/workflows/verify-studio.yml'
+      - 'TEST_PLAN.md'
+      - 'docs/DECISIONS.md'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: verify-studio-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test-studio:
+    # The browser smoke test currently uses Windows Chrome and taskkill.
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Check JavaScript syntax
+        run: |
+          node --check studio/server.mjs
+          node --check studio/dev-agent-engine.mjs
+          node --check studio/patch-applier.mjs
+      - name: Run Studio test suites
+        run: |
+          node studio/dev-workspace.test.mjs
+          node studio/patch-applier.test.mjs
+          node studio/auto-wheel.test.mjs
+          node studio/dev-agent-engine.test.mjs
+          node studio/test.mjs
+          node studio/browser-smoke.mjs
+      - name: Check patch whitespace
+        run: git diff --check

@@ -1,28 +1,19 @@
-# MayzicAI Architecture Decision Records
+# Architecture Decisions
 
-This file records decisions that constrain future implementation. Add a dated entry when a decision changes.
+## ADR-0001 — Isolated workspace
+**Status:** Accepted. All implementation work is limited to `D:\META_D\02_PRODUCTS\MAYZICAI`. Other projects, websites and Supabase projects remain untouched without explicit approval.
 
-## ADR-001 — Isolated workspace
+## ADR-0002 — Local-first development data
+**Status:** Accepted. Private usage ledger, logs and local runtime data remain on the development PC and are excluded from the public Git repository. Local prototype data is not production billing truth.
 
-- **Status:** Accepted
-- **Decision:** Keep MayzicAI in `D:\META_D\02_PRODUCTS\MAYZICAI` and do not modify unrelated projects without explicit permission.
-- **Reason:** Avoid accidental cross-project changes and keep testing reproducible.
+## ADR-0003 — Global-first product direction
+**Status:** Accepted. MayzicAI is planned as a multi-product AI ecosystem. First UI locales are English and Hindi; architecture should allow additional locales through message catalogs and locale-aware formatting.
 
-## ADR-002 — Public source, private runtime data
+## ADR-0004 — Web and Android together at product-design level
+**Status:** Accepted. Web and native Android are planned together with shared, versioned API contracts and consistent product behavior. Implementation may be phased according to test results and toolchain readiness. The Android app must not depend on a PC connection for its intended independent operation.
 
-- **Status:** Accepted
-- **Decision:** Keep the GitHub repository public, but publish only reviewed source, documentation, tests, and synthetic fixtures. The local meter ledger, database, logs, credentials, customer records, and payment data remain on the development PC.
-- **Reason:** Support transparent public development without exposing operational or personal data.
-- **Consequence:** Every commit and historical version must be treated as public; staged-content review and secret scanning are required before pushing.
+## ADR-0005 — Local tests before publication
+**Status:** Accepted. Run local checks, inspect exact diffs, scan staged changes for secrets/private data, and only then ask for or proceed with review-approved commit/push. No automatic push in this task.
 
-## ADR-003 — Local meter before cloud integration
-
-- **Status:** Accepted
-- **Decision:** Implement and test local usage metering first. Supabase, if later approved, is for shared app data and must use a dedicated MayzicAI project. Do not apply migrations to existing Supabase projects.
-- **Reason:** Keep private usage records local and avoid accidental changes to unrelated databases.
-
-## ADR-004 — Demo values are not production data
-
-- **Status:** Accepted
-- **Decision:** Clearly label prototype values as simulated. Do not represent the dashboard as a functioning billing system until server-side ingestion, authorization, persistence, pricing, and tests exist.
-- **Reason:** Prevent misleading usage, cost, and revenue claims.
+## ADR-0006 — Shared backend needs separate approval
+**Status:** Accepted. No new Supabase project is created and no existing project or migration is touched as part of the architecture plan. A dedicated backend requires explicit approval and a reviewed security design.
