@@ -54,12 +54,19 @@ try {
     '--user-data-dir=' + profileDir, base + '/'
   ], { stdio: 'ignore', windowsHide: true });
   let targets;
+  let tab;
   for (let i = 0; i < 60; i++) {
-    try { const r = await fetch('http://127.0.0.1:' + devtoolsPort + '/json'); if (r.ok) { targets = await r.json(); break; } } catch {}
+    try {
+      const r = await fetch('http://127.0.0.1:' + devtoolsPort + '/json');
+      if (r.ok) {
+        targets = await r.json();
+        tab = targets.find(t => t.type === 'page' && t.url.includes(base));
+        if (tab) break;
+      }
+    } catch {}
     await wait(150);
   }
   assert.ok(targets, 'Chrome DevTools should start');
-  const tab = targets.find(t => t.type === 'page' && t.url.includes(base));
   assert.ok(tab, 'MayzicAI browser tab should exist');
   ws = new WebSocket(tab.webSocketDebuggerUrl);
   await new Promise((resolve, reject) => { ws.onopen = resolve; ws.onerror = reject; });
