@@ -60,7 +60,7 @@ try {
       const r = await fetch('http://127.0.0.1:' + devtoolsPort + '/json');
       if (r.ok) {
         targets = await r.json();
-        tab = targets.find(t => t.type === 'page' && t.url.includes(base));
+        tab = targets.find(t => t.type === 'page');
         if (tab) break;
       }
     } catch {}
@@ -89,6 +89,13 @@ try {
     return result.result.value;
   };
   await send('Page.enable');
+  await send('Page.navigate', { url: base + '/' });
+  let loaded = false;
+  for (let i = 0; i < 60; i++) {
+    if ((await evaluate('location.href')).startsWith(base)) { loaded = true; break; }
+    await wait(100);
+  }
+  assert.ok(loaded, 'MayzicAI page should navigate to the local app');
   const preflight = await evaluate("({url:location.href,title:document.title,language:!!document.querySelector('#language-select'),chatInput:!!document.querySelector('#chat-input'),chatForm:!!document.querySelector('#chat-form')})");
   assert.ok(preflight.language && preflight.chatInput && preflight.chatForm, 'Chat controls missing: ' + JSON.stringify(preflight));
   const result = await evaluate(`(async () => {
