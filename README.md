@@ -1,29 +1,67 @@
-# MayzicAI — isolated workspace
+# MayzicAI Platform
 
-Brand: MayzicAI
-Tagline: Intelligence. Innovation. Independence.
+**Tagline:** Intelligence. Innovation. Independence.
 
-## Goal
-Build a family of native apps under one brand, with a shared admin console and a transparent usage-meter/billing foundation.
+MayzicAI is an isolated workspace for building a family of AI-powered native apps, developer tools, and shared platform services.
 
-## Safety boundary
-This workspace is new and isolated at D:\META_D\02_PRODUCTS\MAYZICAI. Existing projects and websites are not to be modified without explicit permission.
+## Project status
 
-## Initial structure
-- dashboard/ — first admin-console prototype
-- meter/ — usage metering and billing design
-- docs/ — architecture, decisions, and test notes
+- **Brand landing page:** Published with GitHub Pages.
+- **Admin dashboard:** Static UI prototype; displayed metrics are simulated demo data.
+- **Usage meter:** Requirements and schema draft exist; local persistence and ingestion backend are not implemented.
+- **Authentication, billing, and payments:** Not implemented.
+- **Supabase:** Not connected; no migration has been applied to any Supabase project.
 
-## Meter requirements
-Track usage by product, user/account, service, unit, timestamp, and request ID. Keep an auditable event log. Separate usage measurement from price calculation. Enforce server-side limits, idempotency, and transparent user-facing pricing before charging real money.
+Do not interpret prototypes, schema drafts, or planned features as production-ready services.
 
-## Build stages
-1. Establish isolated workspace and requirements.
-2. Prototype the dashboard UI with clearly labelled demo data.
-3. Define meter event schema and test cases.
-4. Choose backend after budget and hosting requirements are confirmed.
-5. Implement authentication, server-side metering, and billing only after design review.
-6. Test on a real device/environment before claiming success.
+## Repository layout
 
-## Status
-Workspace scaffold created. Dashboard is a UI prototype only; no real authentication, cloud connection, payment processing, or production billing is configured.
+| Path | Purpose |
+| --- | --- |
+| `index.html` | Public MayzicAI landing page |
+| `dashboard/` | Admin-console UI prototype |
+| `meter/` | Local-first usage meter documentation and future implementation |
+| `meter/data/` | Private local meter data; never commit |
+| `meter/logs/` | Private local logs; never commit |
+| `supabase/migrations/` | Reviewed SQL drafts; not automatically applied |
+| `docs/` | Architecture, decisions, and engineering workflow |
+| `PRIVACY.md` | Data boundaries and publishing rules |
+| `TEST_PLAN.md` | Verification status and acceptance checks |
+
+## Non-negotiable boundaries
+
+1. Work only in `D:\META_D\02_PRODUCTS\MAYZICAI` unless explicitly authorized otherwise.
+2. Do not modify other projects, websites, or existing Supabase projects without explicit permission.
+3. Keep the usage ledger, local database, logs, customer records, and payment details on the development PC.
+4. The GitHub repository is public. Publish only reviewed source, tests, and documentation that contain no secrets or private data.
+5. Test locally before committing or pushing. Never claim a test passed unless it was actually run.
+6. Never collect real payments until identity, authorization, server-side metering, pricing, and billing tests are complete.
+
+## Development workflow
+
+1. Read `docs/GIT_WORKFLOW.md` and `TEST_PLAN.md` before making changes.
+2. Check `git status` and the current branch before editing.
+3. Make a focused change and review `git diff`.
+4. Run relevant local checks and update test documentation with actual results.
+5. Scan staged changes for secrets and private data.
+6. Commit with a clear conventional commit message, then push only reviewed changes.
+
+## Quick Git commands
+
+```powershell
+git status --short --branch
+git diff --check
+git diff
+git log -5 --oneline --decorate
+```
+
+See [`docs/GIT_WORKFLOW.md`](docs/GIT_WORKFLOW.md) for the full process.
+
+## Public links
+
+- Live landing page: https://codingbotlab.github.io/mayzicai-platform/
+- Public source repository: https://github.com/codingbotlab/mayzicai-platform
+
+## License and brand
+
+No license or trademark clearance is implied by this scaffold. Add a license only after deciding how the public source may be reused. Check name and domain availability separately before making legal or commercial claims.

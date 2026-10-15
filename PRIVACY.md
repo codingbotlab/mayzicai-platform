@@ -1,22 +1,33 @@
-# MayzicAI data and repository privacy rules
+# MayzicAI Privacy and Publishing Rules
 
-## Local-only meter
-- The usage meter's private event ledger and local database stay on Mayank's PC.
-- Keep private runtime data under meter/data/ (ignored by Git).
-- Keep meter logs under meter/logs/ (ignored by Git).
-- Never commit user records, customer usage histories, payment details, access tokens, API keys, passwords, .env files, or database dumps.
-- Git may contain source code, tests, documentation, non-secret schema/migrations, and .env.example with placeholder values only.
+## Data classification
 
-## Public vs private information
-- Treat customer/account data and identifiable usage events as private.
-- Only publish data that is intentionally public and reviewed for personal data/secrets.
-- Public data should be curated into a separate export or fixture; do not publish raw meter events.
-- A private GitHub repository is recommended for early development. If the repository is made public later, review the full commit history and repository contents first. Deleting a file in a later commit does not remove it from earlier history.
+### Public repository may contain
+- Reviewed application source code and tests.
+- Architecture documents and non-secret schema/migration drafts.
+- Sanitized sample fixtures with synthetic data only.
+- `.env.example` files containing placeholder values only.
 
-## Supabase
-- Supabase is for the app's shared application data only if/when needed; the local meter ledger stays on this PC.
-- Do not apply migrations to existing Supabase projects.
-- Any future Supabase project must be dedicated to MayzicAI, with authentication and row-level security designed before storing real user data.
+### Must remain private on the development PC
+- Meter event ledger and local database files.
+- Raw usage logs, identifiable usage histories, customer/account records, and personal data.
+- Payment details, credentials, access tokens, API keys, passwords, private certificates, and real `.env` files.
+- Database dumps or exports containing real records.
 
-## Current implementation status
-The current dashboard uses demo values in browser memory. It does not yet write to a local database, and the meter backend is not implemented. This document describes the required privacy boundary, not a claim that local persistence already works.
+The repository is **public**. Treat every committed file and its Git history as publicly accessible. Deleting a secret in a later commit does not remove it from earlier history; rotate exposed credentials and follow a history-cleanup procedure if a secret is ever committed.
+
+## Local-only usage meter
+
+- The private meter ledger and local database must remain under `meter/data/` on Mayank's PC.
+- Private meter logs must remain under `meter/logs/`.
+- `.gitignore` must exclude local data, logs, database files, secrets, and generated output.
+- Never commit raw meter events. If test fixtures are needed, use synthetic, non-identifying examples.
+- Review `git status`, `git diff --cached`, and staged file names before every push.
+
+## Supabase boundary
+
+Supabase is not currently connected to this workspace. If it is needed later, it is for shared application data only unless a new design is explicitly reviewed. The local meter ledger stays on this PC. Do not apply migrations to existing Supabase projects. Any future dedicated project requires reviewed authentication, authorization, tenant isolation, and row-level security before real data is stored.
+
+## Current implementation truth
+
+The dashboard currently displays simulated values in browser memory. It does not persist meter events to a local database. A local meter backend, production authentication, cloud connection, payment processing, and production billing are not implemented. This document defines rules; it is not evidence that those controls have all been technically enforced.
