@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://codingbotlab.github.io/mayzicai-platform/sitemap.xml

@@ -4,6 +4,8 @@ on:
     branches: [main]
     paths:
       - 'index.html'
+      - 'robots.txt'
+      - 'sitemap.xml'
       - '.github/workflows/pages.yml'
   workflow_dispatch:
 permissions:
