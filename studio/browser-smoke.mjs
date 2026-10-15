@@ -4,13 +4,14 @@ import { spawn, spawnSync } from 'node:child_process';
 import fs from 'node:fs';
 import { setTimeout as wait } from 'node:timers/promises';
 import path from 'node:path';
+import os from 'node:os';
 import { fileURLToPath } from 'node:url';
 
 const root = path.dirname(fileURLToPath(import.meta.url));
 const appPort = 52000 + Math.floor(Math.random() * 7000);
 const devtoolsPort = 10000 + Math.floor(Math.random() * 10000);
 const dataDir = path.join(root, '.browser-data-' + process.pid);
-const profileDir = 'C:\\Temp\\mayzicai-e2e-' + process.pid;
+const profileDir = path.join(os.tmpdir(), 'mayzicai-e2e-' + process.pid);
 const mockText = 'Namaste from browser test';
 let receivedRequest = null;
 let mock = null;
@@ -46,7 +47,8 @@ try {
     await wait(100);
   }
   assert.ok(ready, 'local app server should start');
-  chrome = spawn('C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe', [
+  const chromePath = process.env.MAYZICAI_CHROME_PATH || 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe';
+  chrome = spawn(chromePath, [
     '--headless=new', '--disable-gpu', '--no-first-run', '--no-default-browser-check',
     '--remote-debugging-port=' + devtoolsPort, '--remote-allow-origins=*',
     '--user-data-dir=' + profileDir, base + '/'

@@ -29,13 +29,18 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 24
+      - name: Set up Chrome
+        id: chrome
+        uses: browser-actions/setup-chrome@v1
       - name: Check JavaScript syntax
         run: |
           node --check studio/server.mjs
           node --check studio/dev-agent-engine.mjs
           node --check studio/patch-applier.mjs
       - name: Run Studio test suites
+        env:
+          MAYZICAI_CHROME_PATH: ${{ steps.chrome.outputs.chrome-path }}
         run: |
           node studio/dev-workspace.test.mjs
           node studio/patch-applier.test.mjs
@@ -44,4 +49,4 @@ jobs:
           node studio/test.mjs
           node studio/browser-smoke.mjs
       - name: Check patch whitespace
-        run: git diff --check
+        run: git diff --check HEAD^ HEAD

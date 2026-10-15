@@ -181,6 +181,9 @@ export async function verifyStagedPatch({ workspaceRoot, patchStager, patchId, c
           '--permission',
           '--allow-fs-read=' + tempRoot,
           '--allow-fs-write=' + tempRoot,
+          '--allow-fs-write=' + tempData,
+          '--allow-fs-write=' + tmpDir,
+          '--allow-fs-write=' + tempDir,
           '--import=' + pathToFileURL(guardPath).href,
           path.join(tempDir, ...test.script.split('/'))
         ];
