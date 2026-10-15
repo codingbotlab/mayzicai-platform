@@ -1,0 +1,31 @@
+# Secrets and local configuration
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+secrets/
+credentials/
+
+# Local meter data and private usage logs (never commit)
+meter/data/
+meter/*.db
+meter/*.sqlite
+meter/*.sqlite3
+meter/logs/
+*.meterlog
+*.usage.jsonl
+
+# Local runtime data and generated files
+data/
+logs/
+*.log
+*.tmp
+.DS_Store
+Thumbs.db
+
+# Dependencies and build output
+node_modules/
+dist/
+build/
+coverage/
