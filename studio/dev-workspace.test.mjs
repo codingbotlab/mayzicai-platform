@@ -25,6 +25,14 @@ try {
 
   const stager = createPatchStager({ workspaceRoot, dataDir, clock: () => 1_800_000_000_000 });
   const diff = '--- a/studio/auto-wheel.mjs\n+++ b/studio/auto-wheel.mjs\n@@ -1,2 +1,2 @@\n-<main>Original</main>\n+<main>Reviewed candidate</main>\n <footer>Keep</footer>\n';
+  const selected = context.files.map(({path,sha256}) => ({path,sha256}));
+  const rejectPatch = candidate => assert.throws(() => stager.stage({ task: 'Reject unsafe patch', selectedFiles: selected, diff: candidate }));
+  rejectPatch('diff --git a/studio/auto-wheel.mjs b/studio/auto-wheel.mjs\n' + diff);
+  rejectPatch(diff.replace('@@ -1,2 +1,2 @@', 'old mode 100644\n@@ -1,2 +1,2 @@'));
+  rejectPatch(diff.replace('@@ -1,2 +1,2 @@', 'GIT binary patch\n@@ -1,2 +1,2 @@'));
+  rejectPatch(diff.replace('@@ -1,2 +1,2 @@', '@@ -1,2 +1,3 @@'));
+  rejectPatch(diff + 'old mode 100644\n');
+  rejectPatch(diff.replace('studio/auto-wheel.mjs', 'studio/server.mjs'));
   const manifest = stager.stage({ task: 'Change one heading', selectedFiles: context.files.map(({path,sha256}) => ({path,sha256})), diff });
   assert.equal(manifest.status, 'awaiting-human-review');
   assert.equal(manifest.applied, false);

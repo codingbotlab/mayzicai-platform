@@ -27,6 +27,54 @@ function normalizeRelative(input) {
   return relative;
 }
 function sha256(text) { return crypto.createHash('sha256').update(text, 'utf8').digest('hex'); }
+
+function validateUnifiedDiff(diff, selectedHashes) {
+  const lines = diff.replace(/\r\n/g, '\n').split('\n');
+  if (lines.at(-1) === '') lines.pop();
+  let index = 0;
+  const targets = [];
+  while (index < lines.length) {
+    if (!lines[index].startsWith('--- a/')) throw new Error('Unsupported patch metadata or malformed unified-diff file header.');
+    const oldPath = lines[index].slice(6);
+    index++;
+    if (index >= lines.length || !lines[index].startsWith('+++ b/')) throw new Error('Each old file header must be followed by a new file header.');
+    const newPath = lines[index].slice(6);
+    index++;
+    const oldNormalized = normalizeRelative(oldPath);
+    const newNormalized = normalizeRelative(newPath);
+    if (oldNormalized !== newNormalized) throw new Error('New files, deletions, and renames are not supported in this staging step.');
+    if (!selectedHashes.has(oldNormalized)) throw new Error('Patch target was not included in the reviewed source context: ' + oldNormalized);
+    if (targets.includes(oldNormalized)) throw new Error('Duplicate patch target: ' + oldNormalized);
+    targets.push(oldNormalized);
+    let hunkCount = 0;
+    while (index < lines.length && lines[index].startsWith('@@ ')) {
+      const match = lines[index].match(/^@@ -(\d+)(?:,(\d+))? \+(\d+)(?:,(\d+))? @@(?: .*)?$/);
+      if (!match) throw new Error('Malformed unified-diff hunk header.');
+      const oldExpected = match[2] === undefined ? 1 : Number(match[2]);
+      const newExpected = match[4] === undefined ? 1 : Number(match[4]);
+      if (oldExpected + newExpected === 0) throw new Error('Empty unified-diff hunks are not supported.');
+      index++;
+      let oldSeen = 0;
+      let newSeen = 0;
+      while (oldSeen < oldExpected || newSeen < newExpected) {
+        if (index >= lines.length) throw new Error('Truncated unified-diff hunk.');
+        const line = lines[index];
+        if (line.startsWith(' ')) { oldSeen++; newSeen++; }
+        else if (line.startsWith('-')) oldSeen++;
+        else if (line.startsWith('+')) newSeen++;
+        else throw new Error('Unsupported metadata or malformed hunk line.');
+        if (oldSeen > oldExpected || newSeen > newExpected) throw new Error('Unified-diff hunk line counts do not match its header.');
+        index++;
+        if (index < lines.length && lines[index] === '\\ No newline at end of file') index++;
+      }
+      hunkCount++;
+    }
+    if (hunkCount === 0) throw new Error('Every patch file must contain at least one valid text hunk.');
+    if (index < lines.length && !lines[index].startsWith('--- a/')) throw new Error('Unsupported trailing patch metadata or malformed file section.');
+  }
+  if (targets.length < 1 || targets.length > DEV_WORKSPACE_MAX_FILES) throw new Error('Expected a unified diff with 1-4 file sections.');
+  return targets;
+}
 function inside(parent, child) {
   const rel = path.relative(parent, child);
   return rel === '' || (!rel.startsWith('..' + path.sep) && rel !== '..' && !path.isAbsolute(rel));
@@ -79,18 +127,7 @@ export function createPatchStager({ workspaceRoot, dataDir, clock = () => Date.n
         throw new Error('Source file changed after context was read; refresh context before staging.');
       }
     }
-    const headers = [...diff.matchAll(/^--- a\/([^\r\n]+)\r?\n\+\+\+ b\/([^\r\n]+)$/gm)];
-    if (headers.length < 1 || headers.length > DEV_WORKSPACE_MAX_FILES) throw new Error('Expected a unified diff with 1–4 file headers.');
-    const targets = [];
-    for (const [, oldPath, newPath] of headers) {
-      const oldNormalized = normalizeRelative(oldPath);
-      const newNormalized = normalizeRelative(newPath);
-      if (oldNormalized !== newNormalized) throw new Error('New files, deletions, and renames are not supported in this staging step.');
-      if (!selectedHashes.has(oldNormalized)) throw new Error('Patch target was not included in the reviewed source context: ' + oldNormalized);
-      if (targets.includes(oldNormalized)) throw new Error('Duplicate patch target: ' + oldNormalized);
-      targets.push(oldNormalized);
-    }
-    if (!/^@@ /m.test(diff)) throw new Error('Unified diff has no hunk headers; nothing staged.');
+    const targets = validateUnifiedDiff(diff, selectedHashes);
     const id = crypto.randomUUID();
     const folder = path.join(patchesRoot, id);
     fs.mkdirSync(folder, { recursive: false });
@@ -164,6 +201,9 @@ export function createPatchStager({ workspaceRoot, dataDir, clock = () => Date.n
     const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
     const diff = fs.readFileSync(patchPath, 'utf8');
     if (sha256(diff) !== manifest.patchSha256) throw new Error('Staged patch integrity check failed.');
+    if (!Array.isArray(manifest.targets) || manifest.targets.length < 1 || manifest.targets.length > DEV_WORKSPACE_MAX_FILES) throw new Error('Staged patch manifest has invalid targets.');
+    const validatedTargets = validateUnifiedDiff(diff, new Map(manifest.targets.map(target => [target.path, target.expectedSourceSha256])));
+    if (validatedTargets.length !== manifest.targets.length || validatedTargets.some((target, index) => target !== manifest.targets[index].path)) throw new Error('Staged patch targets do not match the validated patch manifest.');
     const verificationPath = path.join(folder, 'verification.json');
     let verification = null;
     if (fs.existsSync(verificationPath)) verification = JSON.parse(fs.readFileSync(verificationPath, 'utf8'));
